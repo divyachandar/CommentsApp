@@ -5,9 +5,18 @@ import CommentItem from '../CommentItem'
 
 import './index.css'
 
+const initialContainerBackgroundClassNames = [
+  'amber',
+  'blue',
+  'orange',
+  'emerald',
+  'teal',
+  'red',
+  'light-blue',
+]
+
 class Comments extends Component {
   state = {
-    count: 0,
     commentsList: [],
     name: '',
     comment: '',
@@ -17,36 +26,53 @@ class Comments extends Component {
     this.setState(prevState => ({
       commentsList: prevState.commentsList.map(eachComment => {
         if (id === eachComment.id) {
-          return {...eachComment, isLike: !prevState.isLike}
+          return {...eachComment, isLike: !eachComment.isLike}
         }
         return eachComment
       }),
     }))
   }
 
+  renderCommentsList = () => {
+    const {commentsList} = this.state
+
+    return commentsList.map(eachComment => (
+      <CommentItem
+        toggleIsLike={this.toggleIsLike}
+        key={eachComment.id}
+        commentDetails={eachComment}
+        deleteComment={this.deleteComment}
+      />
+    ))
+  }
+
   deleteComment = id => {
     const {commentsList} = this.state
-    const filteredCommentList = commentsList.filter(
-      eachComment => eachComment.id !== id,
-    )
-    this.setState(prevState => ({
-      commentsList: filteredCommentList,
-      count: prevState.count - 1,
-    }))
+    this.setState({
+      commentsList: commentsList.filter(comment => comment.id !== id),
+    })
   }
 
   onAddComment = event => {
     event.preventDefault()
     const {name, comment} = this.state
+    const initialBackgroundColorClassName = `initial-container ${
+      initialContainerBackgroundClassNames[
+        Math.ceil(
+          Math.random() * initialContainerBackgroundClassNames.length - 1,
+        )
+      ]
+    }`
     const newComment = {
       id: uuidv4(),
       name,
       comment,
+      date: new Date(),
       isLike: true,
+      initialClassName: initialBackgroundColorClassName,
     }
     this.setState(prevState => ({
       commentsList: [...prevState.commentsList, newComment],
-      count: prevState.count + 1,
       name: '',
       comment: '',
     }))
@@ -61,59 +87,47 @@ class Comments extends Component {
   }
 
   render() {
-    const {count, commentsList, name, comment} = this.state
+    const {commentsList, name, comment} = this.state
     return (
       <div className="app-container">
-        <div className="comments-app-container">
-          <div className="comments-card-container">
-            <h1 className="comment-header">Comments</h1>
-            <p className="description">say something about 4.o technologies</p>
-            <form
-              className="comment-form-container"
-              onSubmit={this.onAddComment}
-            >
+        <div className="comments-container">
+          <h1 className="app-heading">Comments</h1>
+          <div className="comments-inputs">
+            <form className="form" onSubmit={this.onAddComment}>
+              <p className="form-description">
+                say something about 4.o technologies
+              </p>
               <input
+                type="text"
+                className="name-input"
                 value={name}
                 onChange={this.onChangeName}
                 placeholder="Your Name"
-                className="input-name"
               />
-              <br />
               <textarea
                 value={comment}
                 onChange={this.onChangeComment}
                 placeholder="Your Comment"
-                className="input-comment"
+                className="comment-input"
+                rows="6"
               />
-              <br />
-              <button type="submit" className="button">
+              <button type="submit" className="add-button">
                 Add Comment
               </button>
             </form>
-          </div>
-          <div className="comments-image-gallery">
             <img
+              className="image"
               src="https://assets.ccbp.in/frontend/react-js/comments-app/comments-img.png"
               alt="comments"
             />
           </div>
+          <hr className="line" />
+          <p className="heading">
+            <span className="comments-count">{commentsList.length}</span>
+            Comments
+          </p>
+          <ul className="comments-list">{this.renderCommentsList()}</ul>
         </div>
-
-        <ul className="comments-list">
-          <li>
-            <p>
-              <span className="comments-count">{count}</span>comments
-            </p>
-          </li>
-          {commentsList.map(eachComment => (
-            <CommentItem
-              toggleIsLike={this.toggleIsLike}
-              key={eachComment.id}
-              commentDetails={eachComment}
-              deleteComment={this.deleteComment}
-            />
-          ))}
-        </ul>
       </div>
     )
   }
